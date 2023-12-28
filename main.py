@@ -15,7 +15,7 @@ M = []
 target = []
 
 for e in lista:
-    path = f'../database/ISRA_{e}.xlsx'
+    path = f'./database/ISRA_{e}.xlsx'
     data = pd.read_excel(path)
     #Pipeline
     cfm_scores = rg_isra(data)
