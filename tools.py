@@ -154,7 +154,7 @@ def baremos_isra(rg_dict,sexo,caso):
     if (caso,sexo) not in cases:
         raise AttributeError('Incorrect value of sexo/caso, valid attributes are: clinico/normal - varon/mujer') 
 
-    path_baremos = f'../Baremos/{caso}/{sexo}.xlsx' #Requiere openpyxl
+    path_baremos = f'./Baremos/{caso}/{sexo}.xlsx' #Requiere openpyxl
     baremos = pd.read_excel(path_baremos)
 
     C = rg_dict['C']
