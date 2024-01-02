@@ -206,3 +206,59 @@ def a_classification(centiles_dict):
             a_dict[i] = a_levels[3]
     return a_dict
 
+def load_isra(n_examples):
+    """Loads and processes ISRA data from multiple Excel files.
+
+    Parameters
+    ----------
+    n_examples : int
+        The number of examples (Excel files) to load.
+
+    Returns
+    -------
+    pandas.DataFrame
+        A DataFrame containing the processed ISRA data, with columns:
+         - Names of ISRA scales (e.g., ISRA_1, ISRA_2, ...)
+         - 'A-type': The overall A-type classification
+
+    Raises
+    ------
+    FileNotFoundError
+        If any of the specified Excel files are not found.
+
+    Notes
+    -----
+    - Assumes Excel files are named as 'ISRA_0001.xlsx', 'ISRA_0002.xlsx', ...
+    - Extracts data from specific rows and columns within each Excel file.
+    - Uses functions `rg_isra`, `baremos_isra`, and `a_classification` to
+      calculate scores and classifications (assumed to be defined elsewhere).
+    """
+    elements = []
+    lista = ["%04d" % x for x in range(n_examples+1)]
+    lista.remove('0000')
+
+    for e in lista:
+
+        path = f'./database/ISRA_{e}.xlsx'
+        
+        data = pd.read_excel(path)
+        names = list(data)[2:9] + list(data)[10:20] + list(data)[21:29]
+        df = pd.concat([data.iloc[22,2:9],data.iloc[22,10:20],data.iloc[22,21:29]],axis=0)
+        
+
+        doct = zip(names,df)
+        new_row = dict(doct)
+
+        ##Pipeline find type
+        cfm_scores = rg_isra(data)
+        cfm_centiles = baremos_isra(cfm_scores,'mujer','normal')
+        a_type = a_classification(cfm_centiles)
+
+        new_row['A-type'] = a_type['TOTAL']
+        # new_row['C-A-TYPE'] = a_type['C']
+        # new_row['F-A-TYPE'] = a_type['F']
+        # new_row['M-A-TYPE'] = a_type['M']
+        elements.append(new_row)
+
+    final_df = pd.DataFrame(elements)
+    return final_df
