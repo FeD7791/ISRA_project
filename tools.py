@@ -1,5 +1,6 @@
 import pandas as pd 
 import numpy as np
+import pathlib
 
 
 
@@ -167,10 +168,13 @@ def baremos_isra(rg_dict,sexo,caso):
         for i in np.arange(0,18):
             if j[1] <= baremos[j[2]][19]:
                 centiles[j[0]] = baremos['centil'][19]
-            elif baremos[j[2]][i+1] < j[1] and j[1] <= baremos[j[2]][i]:
+                break
+            elif baremos[j[2]][i+1] <= j[1] and j[1] <= baremos[j[2]][i]:
                 centiles[j[0]] = baremos['centil'][i]
+                break
             elif j[1] > baremos[j[2]][0]:
                 centiles[j[0]] = baremos['centil'][0]
+                break
     return centiles  
      
 def a_classification(centiles_dict):
@@ -206,7 +210,7 @@ def a_classification(centiles_dict):
             a_dict[i] = a_levels[3]
     return a_dict
 
-def load_isra(n_examples):
+def load_isra(n_examples,data_path):
     """Loads and processes ISRA data from multiple Excel files.
 
     Parameters
@@ -238,21 +242,31 @@ def load_isra(n_examples):
     lista.remove('0000')
 
     for e in lista:
-
-        path = f'./database/ISRA_{e}.xlsx'
-        
+        path = pathlib.Path(data_path) / f"ISRA_{e}.xlsx"
+        # path = f'./database/ISRA_{e}.xlsx'
         data = pd.read_excel(path)
+        # Sexo y muestra
+        sexo = str.lower(data['SEXO'][0])
+        sexo = sexo.strip()
+        poblacion = str.lower(data['POBLACION'][0])
+        poblacion = poblacion.strip()
+        if poblacion == 'clinica':
+            poblacion = 'clinico'
         names = list(data)[2:9] + list(data)[10:20] + list(data)[21:29]
         df = pd.concat([data.iloc[22,2:9],data.iloc[22,10:20],data.iloc[22,21:29]],axis=0)
         
 
         doct = zip(names,df)
         new_row = dict(doct)
-
+        try:
         ##Pipeline find type
-        cfm_scores = rg_isra(data)
-        cfm_centiles = baremos_isra(cfm_scores,'mujer','normal')
-        a_type = a_classification(cfm_centiles)
+            # if e == '0089':
+            #     import ipdb;ipdb.set_trace()
+            cfm_scores = rg_isra(data)
+            cfm_centiles = baremos_isra(cfm_scores,sexo,poblacion)
+            a_type = a_classification(cfm_centiles)
+        except (KeyError,AttributeError):
+            print('Problen with value:',e)
 
         new_row['A-type'] = a_type['TOTAL']
         # new_row['C-A-TYPE'] = a_type['C']
